@@ -1,0 +1,133 @@
+<div class="table-container">
+  <table class="work-items-table">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>
+          Title
+          <button (click)="toggleFilter('title')" class="filter-icon">🔍</button>
+        </th>
+        <th>
+          State
+          <button (click)="toggleFilter('state')" class="filter-icon">🔍</button>
+        </th>
+        <th>
+          Assigned To
+          <button (click)="toggleFilter('assignedTo')" class="filter-icon">🔍</button>
+        </th>
+        <th>
+          Created Date
+          <button (click)="toggleFilter('createdDate')" class="filter-icon">🔍</button>
+        </th>
+        <th>
+          Type
+          <button (click)="toggleFilter('type')" class="filter-icon">🔍</button>
+        </th>
+        <th>
+          <button (click)="resetFilters()" class="reset-filters-btn">Reset Filters</button>
+        </th>
+      </tr>
+    </thead>
+    <tbody>
+      <ng-container *ngFor="let workItem of paginatedWorkItems">
+        <ng-container
+          *ngTemplateOutlet="renderWorkItem; context: { $implicit: workItem, level: 0, parentId: null }">
+        </ng-container>
+      </ng-container>
+    </tbody>
+  </table>
+</div>
+
+<!-- Pagination Controls -->
+<div class="pagination-controls">
+  <button (click)="previousPage()" [disabled]="currentPage === 1" class="filter-btn">Previous</button>
+  
+  <span>Page</span>
+  <input 
+    type="number" 
+    [(ngModel)]="inputPageNumber" 
+    [min]="1" 
+    [max]="totalPages" 
+    class="page-input" 
+    [placeholder]="currentPage.toString()" 
+  />
+  <span>of {{ totalPages }}</span>
+  
+  <button (click)="goToInputPage()" [disabled]="!isValidPageNumber(inputPageNumber)" class="filter-btn">Go</button>
+  
+  <button (click)="nextPage()" [disabled]="currentPage === totalPages" class="filter-btn">Next</button>
+</div>
+
+
+<!-- Filter Modal -->
+<div class="filter-modal-overlay" *ngIf="isFilterModalOpen" (click)="closeFilterModal()">
+  <div class="filter-modal" (click)="$event.stopPropagation()">
+    <h3 class="filter-title">Filter by {{ activeFilter | uppercase }}</h3>
+
+    <div *ngIf="activeFilter === 'state'">
+      <div class="checkbox-group">
+        <label *ngFor="let option of stateOptions">
+          <input type="checkbox" [(ngModel)]="filters.state[option]" class="filter-checkbox" /> {{ option }}
+        </label>
+      </div>
+    </div>
+
+    <div *ngIf="activeFilter === 'title'">
+      <input type="text" [(ngModel)]="filters.title" placeholder="Filter by title" class="filter-input" />
+    </div>
+
+    <div *ngIf="activeFilter === 'assignedTo'">
+      <input type="text" [(ngModel)]="filters.assignedTo" placeholder="Filter by Assigned To" class="filter-input" />
+    </div>
+
+    <div *ngIf="activeFilter === 'createdDate'">
+      <input type="date" [(ngModel)]="filters.createdDate" class="filter-input" />
+    </div>
+
+    <div *ngIf="activeFilter === 'type'">
+      <div class="checkbox-group">
+        <label *ngFor="let option of workItemTypeOptions">
+          <input type="checkbox" [(ngModel)]="filters.type[option]" class="filter-checkbox" /> {{ option }}
+        </label>
+      </div>
+    </div>
+
+    <div class="filter-actions">
+      <button (click)="applyFilters()" class="filter-btn">Apply</button>
+      <button (click)="closeFilterModal()" class="filter-btn close-btn">Close</button>
+    </div>
+  </div>
+</div>
+
+<ng-template #renderWorkItem let-workItem let-level="level" let-parentId="parentId">
+  <tr [class.child-row]="level > 0">
+    <td [style.padding-left.px]="level * 20">
+      <button *ngIf="hasChildren(workItem, level)"
+        (click)="toggleExpand(workItem, parentId)"
+        class="expand-button"
+        [disabled]="!hasChildren(workItem, level)">
+        {{ isExpanded(workItem, parentId) ? '-' : '+' }}
+      </button>
+
+      {{ workItem.id }}
+    </td>
+    <td>{{ workItem.title }}</td>
+    <td [ngStyle]="{ 'background-color': getStateColor(workItem.state), color: '#fff' }">
+      {{ workItem.state }}
+    </td>
+    <td>{{ workItem.assignedTo }}</td>
+    <td>{{ workItem.createdDate | date: 'dd/MM/yyyy' }}</td>
+    <td>{{ workItem.workItemType }}</td>
+  </tr>
+
+  <ng-container *ngIf="isExpanded(workItem, parentId)">
+    <!-- Render linked child work items -->
+    <ng-container *ngFor="let childId of workItem.links">
+      <ng-container *ngIf="childId">
+        <ng-container
+          *ngTemplateOutlet="renderWorkItem; context: { $implicit: getWorkItemById(childId), level: level + 1, parentId: workItem.id }">
+        </ng-container>
+      </ng-container>
+    </ng-container>
+  </ng-container>
+</ng-template>

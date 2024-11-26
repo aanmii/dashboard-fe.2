@@ -1,0 +1,23 @@
+@import "primeng/resources/themes/lara-light-blue/theme.css";
+@import "primeng/resources/primeng.css";
+
+
+/* You can add global styles to this file, and also import other style files */
+
+html, body { height: 100%; }
+body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+html, body { height: 100%; }
+body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+/* Globalno stilizovanje za Angular Material header */
+/* Stil za header - tamno roza */
+.mat-header-cell {
+    background-color: #9c1f69 !important; /* Tamno roza boja */
+    color: white !important; /* Bele slova */
+  }
+  
+  /* Hover efekat na redovima */
+  .mat-row:hover {
+    background-color: rgba(110, 14, 72, 0.1); /* Tamniji roze nijansa */
+    transition: background-color 0.3s; /* Glatka promena boje */
+  }
+  
