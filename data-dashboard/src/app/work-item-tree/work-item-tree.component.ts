@@ -114,6 +114,9 @@ export class WorkItemTreeComponent implements OnInit {
   }
 
   applyFilters() {
+    // Sačuvajte trenutnu stranicu pre primene filtera
+    const currentPageBeforeFilter = this.currentPage;
+  
     this.filteredWorkItems = this.workItems.filter((item) => {
       const matchesTitle = this.filters.title ? item.title.toLowerCase().includes(this.filters.title.toLowerCase()) : true;
       const matchesAssignedTo = this.filters.assignedTo ? item.assignedTo.toLowerCase().includes(this.filters.assignedTo.toLowerCase()) : true;
@@ -129,12 +132,17 @@ export class WorkItemTreeComponent implements OnInit {
           ? new Date(item.createdDate).toISOString().split('T')[0] === filterDate?.toISOString().split('T')[0]
           : false
         : true;
-
+  
       return matchesTitle && matchesAssignedTo && matchesState && matchesType && matchesCreatedDate;
     });
-    this.currentPage = 1;
+  
+    // Ponovo postavite stranicu na onu koju ste sačuvali
+    this.currentPage = currentPageBeforeFilter;
+  
+    this.currentPage = 1; // Resetuj na prvu stranicu samo ako je potrebno
     this.closeFilterModal();
   }
+  
 
   resetFilters() {
     this.filters = {
@@ -172,6 +180,15 @@ export class WorkItemTreeComponent implements OnInit {
     const key = this.getExpandedKey(workItem, parentId);
     const isCurrentlyExpanded = this.isExpanded(workItem, parentId);
   
+    // Sačuvajte trenutno filtrirane stavke pre proširivanja
+    const currentFilteredWorkItems = [...this.filteredWorkItems];
+  
+    // Sačuvajte trenutne filtere pre nego što se expand radi
+    const currentFilters = { ...this.filters };
+  
+    // Sačuvaj trenutnu stranicu pre nego što izvršite proširivanje
+    const currentPageBeforeExpand = this.currentPage;
+  
     // Zatvori sve expanded stavke na istom nivou
     this.closePreviousExpandedItemOnSameLevel(parentId);
   
@@ -189,7 +206,15 @@ export class WorkItemTreeComponent implements OnInit {
               this.workItems.push(linkedItem);
             }
           });
-          this.filteredWorkItems = [...this.workItems]; 
+  
+          // Vratite filtere na prethodno stanje
+          this.filters = currentFilters;
+  
+          // Osvežite filtrirane stavke koristeći prethodne filtrirane stavke
+          this.filteredWorkItems = [...currentFilteredWorkItems, ...linkedItems];
+  
+          // Ponovno postavite trenutnu stranicu na onu koju ste sačuvali
+          this.currentPage = currentPageBeforeExpand;
         },
         (error) => {
           console.error('Error loading linked WorkItems:', error);
@@ -197,6 +222,7 @@ export class WorkItemTreeComponent implements OnInit {
       );
     }
   }
+  
   
   private closePreviousExpandedItemOnSameLevel(parentId: number | null) {
     this.expandedItems.forEach((isExpanded, key) => {
